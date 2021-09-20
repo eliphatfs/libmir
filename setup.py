@@ -6,7 +6,7 @@ import shutil
 compile_result = subprocess.call([
     'gcc', '-shared', '-o', 'libmir.dll',
     'mir.c', 'mir-gen.c',
-    '-Os'
+    '-Os', '-fPIC'
 ], cwd='./mir-src')
 if compile_result != 0:
     raise Exception("MIR GCC build failed with return code %d." % compile_result)
