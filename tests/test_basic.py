@@ -66,3 +66,7 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(ress, -2)
         capi.libmir_gen_finish(ctx)
         capi.libmir_finish(ctx)
+
+
+if __name__ == "__main__":
+    unittest.main()
