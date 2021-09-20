@@ -20,15 +20,19 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
   run:
-    name: Run tests on ${{ matrix.os }}
+    name: Run tests on ${{ matrix.os }} with python ${{ matrix.python-version }}
     needs: [build]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04, windows-2019-gcc, macos-11]
+        os: [ubuntu-18.04, windows-2019, macos-11]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
 
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Clean source code
         run: rm -r ./libmir
@@ -39,7 +43,7 @@ jobs:
           path: built_wheels
 
       - name: Install packages
-        run: python3 -m pip install --no-index --find-links=./built_wheels libmir
+        run: python -m pip install --no-index --find-links=./built_wheels libmir
       
       - name: Run tests
-        run: python3 run_tests.py
+        run: python run_tests.py
