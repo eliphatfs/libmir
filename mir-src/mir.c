@@ -1495,6 +1495,10 @@ MIR_module_t MIR_get_module (MIR_context_t ctx, const char *name) {
   return NULL;
 }
 
+MIR_module_t MIR_get_last_module (MIR_context_t ctx) {
+  return DLIST_TAIL (MIR_module_t, *MIR_get_module_list (ctx));
+}
+
 static void setup_global (MIR_context_t ctx, const char *name, void *addr, MIR_item_t def) {
   MIR_item_t item, tab_item;
   MIR_module_t saved = curr_module;

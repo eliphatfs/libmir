@@ -36,6 +36,10 @@ libmir_get_module = libmir.MIR_get_module
 libmir_get_module.argtypes = (ctypes.c_void_p, ctypes.c_char_p)
 libmir_get_module.restype = ctypes.c_void_p
 
+libmir_get_last_module = libmir.MIR_get_last_module
+libmir_get_last_module.argtypes = (ctypes.c_void_p,)
+libmir_get_last_module.restype = ctypes.c_void_p
+
 libmir_item_tab_find = libmir.MIR_item_tab_find
 libmir_item_tab_find.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
 libmir_item_tab_find.restype = ctypes.POINTER(libmir_item)
