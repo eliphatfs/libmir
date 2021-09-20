@@ -6,7 +6,6 @@ import shutil
 compile_result = subprocess.call([
     'gcc', '-shared', '-o', 'libmir.dll',
     'mir.c', 'mir-gen.c',
-    '-Wl,--export-all-symbols',
     '-Os'
 ], cwd='./mir-src')
 if compile_result != 0:
