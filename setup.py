@@ -2,6 +2,7 @@ import setuptools
 import subprocess
 import shutil
 from setuptools.command.build_ext import build_ext
+from distutils.extension import Extension
 
 
 compile_result = subprocess.call([
@@ -28,6 +29,9 @@ class BinaryDistribution(setuptools.Distribution):
     def has_ext_modules(foo):
         return True
 
+    def is_pure(self):
+        return False
+
 
 setuptools.setup(
     name="libmir", # Replace with your own username
@@ -39,6 +43,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/eliphatfs/libmir",
     packages=['libmir'],
+    include_package_data=True,
+    ext_modules=[Extension("libmir.native", [])],
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",
         "License :: OSI Approved :: Apache Software License"
