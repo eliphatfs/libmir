@@ -1,6 +1,7 @@
 import setuptools
 import subprocess
 import shutil
+from setuptools.command.build_ext import build_ext
 
 
 compile_result = subprocess.call([
@@ -15,6 +16,12 @@ shutil.copy('./mir-src/libmir.dll', './libmir/libmir.dll')
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
+
+
+# Dirty fix for https://github.com/pypa/packaging-problems/issues/542
+class build_ext_dummy(build_ext):
+    def run(self):
+        pass
 
 
 class BinaryDistribution(setuptools.Distribution):
@@ -40,5 +47,6 @@ setuptools.setup(
     package_data={
         'libmir': ['libmir.dll'],
     },
+    cmdclass={'build_ext': build_ext_dummy},
     distclass=BinaryDistribution
 )
