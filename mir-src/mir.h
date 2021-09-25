@@ -77,7 +77,7 @@ typedef enum MIR_error_type {
 #define MIR_NO_RETURN
 #endif
 
-typedef void MIR_NO_RETURN (*MIR_error_func_t) (MIR_error_type_t error_type, const char *format,
+typedef void (*MIR_error_func_t) (MIR_error_type_t error_type, const char *format,
                                                 ...);
 
 #if MIR_PARALLEL_GEN
