@@ -6,7 +6,7 @@ class MIRException(RuntimeError):
     pass
 
 
-@ctypes.CFUNCTYPE(None, ctypes.c_int32, ctypes.c_char_p, ctypes.c_void_p)
+@ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_char_p, ctypes.c_void_p)
 def error_callback(error_code, formatter, va_list):
     buffer = ctypes.create_string_buffer(4096)
     capi.libmir_vsnprintf(buffer, 4095, formatter, va_list)
