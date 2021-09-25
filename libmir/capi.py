@@ -24,13 +24,26 @@ class libmir_item(ctypes.Structure):
 
 
 libmir = ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), 'libmir.dll'))
+libmir_err = None
+
+
+def err_check(result, func, args):
+    global libmir_err
+    if libmir_err is not None:
+        loc_err = libmir_err
+        libmir_err = None
+        raise loc_err
+    return result
+
 
 libmir_init = libmir._MIR_init
 libmir_init.restype = ctypes.c_void_p
+libmir_init.errcheck = err_check
 
 libmir_finish = libmir.MIR_finish
 libmir_finish.argtypes = (ctypes.c_void_p,)
 libmir_finish.restype = None
+libmir_finish.errcheck = err_check
 
 libmir_get_module = libmir.MIR_get_module
 libmir_get_module.argtypes = (ctypes.c_void_p, ctypes.c_char_p)
@@ -40,9 +53,9 @@ libmir_get_last_module = libmir.MIR_get_last_module
 libmir_get_last_module.argtypes = (ctypes.c_void_p,)
 libmir_get_last_module.restype = ctypes.c_void_p
 
-libmir_item_tab_find = libmir.MIR_item_tab_find
-libmir_item_tab_find.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
-libmir_item_tab_find.restype = ctypes.POINTER(libmir_item)
+# libmir_item_tab_find = libmir.MIR_item_tab_find
+# libmir_item_tab_find.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
+# libmir_item_tab_find.restype = ctypes.POINTER(libmir_item)
 
 libmir_get_export_item = libmir.MIR_get_export_item
 libmir_get_export_item.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
@@ -51,18 +64,22 @@ libmir_get_export_item.restype = ctypes.POINTER(libmir_item)
 libmir_load_module = libmir.MIR_load_module
 libmir_load_module.argtypes = (ctypes.c_void_p, ctypes.c_void_p)
 libmir_load_module.restype = None
+libmir_load_module.errcheck = err_check
 
 libmir_load_external = libmir.MIR_load_external
 libmir_load_external.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
-libmir_load_module.restype = None
+libmir_load_external.restype = None
+libmir_load_external.errcheck = err_check
 
 libmir_link = libmir.MIR_link
 libmir_link.argtypes = (ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)
 libmir_link.restype = None
+libmir_link.errcheck = err_check
 
 libmir_scan_string = libmir.MIR_scan_string
 libmir_scan_string.argtypes = (ctypes.c_void_p, ctypes.c_char_p)
 libmir_scan_string.restype = None
+libmir_scan_string.errcheck = err_check
 
 libmir_set_interp_interface = libmir.MIR_set_interp_interface
 libmir_set_gen_interface = libmir.MIR_set_gen_interface
@@ -72,11 +89,22 @@ libmir_set_lazy_gen_interface = libmir.MIR_set_lazy_gen_interface
 libmir_gen_init = libmir.MIR_gen_init
 libmir_gen_init.argtypes = (ctypes.c_void_p, ctypes.c_int)
 libmir_gen_init.restype = None
+libmir_gen_init.errcheck = err_check
 
 libmir_gen_set_optimize_level = libmir.MIR_gen_set_optimize_level
 libmir_gen_set_optimize_level.argtypes = (ctypes.c_void_p, ctypes.c_int, ctypes.c_uint)
 libmir_gen_set_optimize_level.restype = None
+libmir_gen_set_optimize_level.errcheck = err_check
 
 libmir_gen_finish = libmir.MIR_gen_finish
 libmir_gen_finish.argtypes = (ctypes.c_void_p,)
 libmir_gen_finish.restype = None
+libmir_gen_finish.errcheck = err_check
+
+libmir_vsnprintf = libmir.MIR_vsnprintf
+libmir_vsnprintf.argtypes = (ctypes.c_char_p, ctypes.c_uint32, ctypes.c_char_p, ctypes.c_void_p)
+libmir_vsnprintf.restype = ctypes.c_int32
+
+libmir_set_error_func = libmir.MIR_set_error_func
+libmir_set_error_func.argtypes = (ctypes.c_void_p, ctypes.c_void_p)
+libmir_set_error_func.restype = None

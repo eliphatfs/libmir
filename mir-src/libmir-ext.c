@@ -1,4 +1,6 @@
 #include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include "mir.h"
 
 
@@ -26,4 +28,9 @@ MIR_item_t MIR_get_export_item (MIR_context_t ctx, const char *name, MIR_module_
     }
   }
   return NULL;
+}
+
+int MIR_vsnprintf(char * buffer, unsigned int n, const char * format, va_list varg)
+{
+    return vsnprintf(buffer, n, format, varg);
 }
