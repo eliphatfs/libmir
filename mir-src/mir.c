@@ -566,16 +566,6 @@ MIR_item_t MIR_item_tab_find (MIR_context_t ctx, const char *name, MIR_module_t 
   return item_tab_find(ctx, name, module);
 }
 
-MIR_item_t MIR_get_export_item (MIR_context_t ctx, const char *name, MIR_module_t module) {
-  for (MIR_item_t item = DLIST_HEAD (MIR_item_t, module->items); item != NULL;
-       item = DLIST_NEXT (MIR_item_t, item)) {
-    if (item->item_type == MIR_export_item && strcmp (item->u.export_id, name) == 0) {
-      return item->ref_def;
-    }
-  }
-  return NULL;
-}
-
 static MIR_item_t item_tab_insert (MIR_context_t ctx, MIR_item_t item) {
   MIR_item_t tab_item;
 
@@ -1481,22 +1471,6 @@ void MIR_finish_module (MIR_context_t ctx) {
   if (curr_module == NULL)
     MIR_get_error_func (ctx) (MIR_no_module_error, "finish of non-existing module");
   curr_module = NULL;
-}
-
-MIR_module_t MIR_get_module (MIR_context_t ctx, const char *name) {
-  MIR_module_t module, next_module;
-
-  for (module = DLIST_HEAD (MIR_module_t, *MIR_get_module_list (ctx)); module != NULL;
-       module = next_module) {
-    next_module = DLIST_NEXT (MIR_module_t, module);
-    if (strcmp(module->name, name) == 0)
-      return module;
-  }
-  return NULL;
-}
-
-MIR_module_t MIR_get_last_module (MIR_context_t ctx) {
-  return DLIST_TAIL (MIR_module_t, *MIR_get_module_list (ctx));
 }
 
 static void setup_global (MIR_context_t ctx, const char *name, void *addr, MIR_item_t def) {
