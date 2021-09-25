@@ -30,7 +30,22 @@ MIR_item_t MIR_get_export_item (MIR_context_t ctx, const char *name, MIR_module_
   return NULL;
 }
 
-int MIR_vsnprintf(char * buffer, unsigned int n, const char * format, va_list varg)
-{
-    return vsnprintf(buffer, n, format, varg);
+char mir_error_buffer[4096];
+int has_error = 0;
+const char * MIR_get_last_error() {
+    if (!has_error) return NULL;
+    else return mir_error_buffer;
+}
+
+void MIR_clear_error() {
+    has_error = 0;
+}
+
+void MIR_error_record_helper(MIR_error_type_t error_code, char * format, ...) {
+  va_list ap;
+
+  va_start (ap, format);
+  vsnprintf (mir_error_buffer, 4095, format, ap);
+  va_end (ap);
+  has_error = 1;
 }

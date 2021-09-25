@@ -24,15 +24,14 @@ class libmir_item(ctypes.Structure):
 
 
 libmir = ctypes.cdll.LoadLibrary(os.path.join(os.path.dirname(__file__), 'libmir.dll'))
-libmir_err = None
 
 
 def err_check(result, func, args):
-    global libmir_err
-    if libmir_err is not None:
-        loc_err = libmir_err
-        libmir_err = None
-        raise loc_err
+    last_error = libmir_get_last_error()
+    if last_error is not None:
+        libmir_clear_error()
+        from . import MIRException
+        raise MIRException(last_error)
     return result
 
 
@@ -101,9 +100,12 @@ libmir_gen_finish.argtypes = (ctypes.c_void_p,)
 libmir_gen_finish.restype = None
 libmir_gen_finish.errcheck = err_check
 
-libmir_vsnprintf = libmir.MIR_vsnprintf
-libmir_vsnprintf.argtypes = (ctypes.c_char_p, ctypes.c_uint32, ctypes.c_char_p, ctypes.c_void_p)
-libmir_vsnprintf.restype = ctypes.c_int32
+libmir_clear_error = libmir.MIR_clear_error
+libmir_clear_error.restype = None
+libmir_get_last_error = libmir.MIR_get_last_error
+libmir_get_last_error.restype = ctypes.c_char_p
+
+libmir_error_record_helper = libmir.MIR_error_record_helper
 
 libmir_set_error_func = libmir.MIR_set_error_func
 libmir_set_error_func.argtypes = (ctypes.c_void_p, ctypes.c_void_p)
