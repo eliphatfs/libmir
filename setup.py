@@ -35,7 +35,7 @@ class BinaryDistribution(setuptools.Distribution):
 
 setuptools.setup(
     name="libmir", # Replace with your own username
-    version="0.1.0a1",
+    version="0.1.0a2",
     author="flandre.info",
     author_email="flandre@scarletx.cn",
     description="Python bindings for MIR JIT.",
