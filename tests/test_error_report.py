@@ -26,12 +26,16 @@ class ErrorReportingTests(unittest.TestCase):
         with self.assertRaises(libmir.MIRException) as exc:
             ctx = libmir.new_context_with_error_report()
             libmir.capi.libmir_scan_string(ctx, ir)
+        libmir.capi.libmir_finish(ctx)
         print(exc.exception, end=' ', flush=True)
 
-    '''def test_link_error(self):
+    def test_link_error(self):
         with self.assertRaises(libmir.MIRException) as exc:
             ctx = libmir.new_context_with_error_report()
+            libmir.capi.libmir_gen_init(ctx, 1)
             libmir.capi.libmir_scan_string(ctx, ir2)
             libmir.capi.libmir_load_module(ctx, libmir.capi.libmir_get_last_module(ctx))
-            libmir.capi.libmir_link(ctx, libmir.capi.libmir_set_gen_interface, ctx)
-        print(exc.exception, end=' ', flush=True)'''
+            libmir.capi.libmir_link(ctx, libmir.capi.libmir_set_gen_interface, None)
+        libmir.capi.libmir_gen_finish(ctx)
+        libmir.capi.libmir_finish(ctx)
+        print(exc.exception, end=' ', flush=True)
