@@ -10,7 +10,7 @@ class MIRException(RuntimeError):
 def error_callback(error_code, formatter, va_list):
     buffer = ctypes.create_string_buffer(4096)
     capi.libmir_vsnprintf(buffer, 4095, formatter, va_list)
-    capi.libmir_err = MIRException(error_code, buffer.value)
+    capi.libmir_err = MIRException(error_code, buffer.value.decode())
 
 
 def new_context_with_error_report():
