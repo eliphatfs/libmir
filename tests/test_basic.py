@@ -31,7 +31,7 @@ capi = libmir.capi
 
 class BasicTests(unittest.TestCase):
     def test_add(self):
-        ctx = capi.libmir_init()
+        ctx = libmir.new_context_with_error_report()
         capi.libmir_gen_init(ctx, 1)
     
         capi.libmir_scan_string(ctx, ir)
@@ -45,7 +45,7 @@ class BasicTests(unittest.TestCase):
         capi.libmir_finish(ctx)
 
     def test_incremental_jit(self):
-        ctx = capi.libmir_init()
+        ctx = libmir.new_context_with_error_report()
         capi.libmir_gen_init(ctx, 1)
 
         capi.libmir_scan_string(ctx, ir)

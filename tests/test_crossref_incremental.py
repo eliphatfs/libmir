@@ -29,7 +29,7 @@ endmodule
 
 class IncrementalCrossRefTests(unittest.TestCase):
     def test_add_11(self):
-        ctx = libmir.capi.libmir_init()
+        ctx = libmir.new_context_with_error_report()
         libmir.capi.libmir_gen_init(ctx, 1)
         libmir.capi.libmir_scan_string(ctx, ir)
         m_add = libmir.capi.libmir_get_last_module(ctx)
