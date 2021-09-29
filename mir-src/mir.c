@@ -127,6 +127,17 @@ int _MIR_reserved_name_p (MIR_context_t ctx, const char *name) {
   return TRUE;
 }
 
+static void process_reserved_name (const char *s, const char *prefix, uint32_t *max_num) {
+  char *end;
+  uint32_t num;
+  size_t len = strlen (prefix);
+
+  if (strncmp (s, prefix, len) != 0) return;
+  num = strtoul (s + len, &end, 10);
+  if (*end != '\0') return;
+  if (*max_num < num) *max_num = num;
+}
+
 struct insn_desc {
   MIR_insn_code_t code;
   const char *name;
@@ -560,10 +571,6 @@ static MIR_item_t item_tab_find (MIR_context_t ctx, const char *name, MIR_module
   item_s.u.func = &func_s;
   if (HTAB_DO (MIR_item_t, module_item_tab, &item_s, HTAB_FIND, tab_item)) return tab_item;
   return NULL;
-}
-
-MIR_item_t MIR_item_tab_find (MIR_context_t ctx, const char *name, MIR_module_t module) {
-  return item_tab_find(ctx, name, module);
 }
 
 static MIR_item_t item_tab_insert (MIR_context_t ctx, MIR_item_t item) {
@@ -1189,6 +1196,7 @@ static MIR_item_t new_func_arr (MIR_context_t ctx, const char *name, size_t nres
     MIR_get_error_func (ctx) (MIR_alloc_error, "Not enough memory for creation of func %s", name);
   }
   func->name = get_ctx_str (ctx, name);
+  func->func_item = func_item;
   func->nres = nres;
   func->res_types = (MIR_type_t *) ((char *) func + sizeof (struct MIR_func));
   for (size_t i = 0; i < nres; i++) func->res_types[i] = canon_type (res_types[i]);
@@ -2178,7 +2186,9 @@ int MIR_op_eq_p (MIR_context_t ctx, MIR_op_t op1, MIR_op_t op2) {
   case MIR_OP_DOUBLE: return op1.u.d == op2.u.d;
   case MIR_OP_LDOUBLE: return op1.u.ld == op2.u.ld;
   case MIR_OP_REF:
-    return strcmp (MIR_item_name (ctx, op1.u.ref), MIR_item_name (ctx, op2.u.ref)) == 0;
+    if (op1.u.ref->item_type == MIR_export_item || op1.u.ref->item_type == MIR_import_item)
+      return strcmp (MIR_item_name (ctx, op1.u.ref), MIR_item_name (ctx, op2.u.ref)) == 0;
+    return op1.u.ref == op2.u.ref;
   case MIR_OP_STR:
     return op1.u.str.len == op2.u.str.len && memcmp (op1.u.str.s, op2.u.str.s, op1.u.str.len) == 0;
   case MIR_OP_MEM:
@@ -2224,7 +2234,10 @@ htab_hash_t MIR_op_hash_step (MIR_context_t ctx, htab_hash_t h, MIR_op_t op) {
     u.ld = op.u.ld;
     return mir_hash_step (mir_hash_step (h, u.u[0]), u.u[1]);
   }
-  case MIR_OP_REF: return mir_hash_step (h, (uint64_t) MIR_item_name (ctx, op.u.ref));
+  case MIR_OP_REF:
+    if (op.u.ref->item_type == MIR_export_item || op.u.ref->item_type == MIR_import_item)
+      return mir_hash_step (h, (uint64_t) MIR_item_name (ctx, op.u.ref));
+    return mir_hash_step (h, (uint64_t) op.u.ref);
   case MIR_OP_STR: return mir_hash_step (h, (uint64_t) op.u.str.s);
   case MIR_OP_MEM:
     h = mir_hash_step (h, (uint64_t) op.u.mem.type);
@@ -2461,7 +2474,7 @@ static void out_str (FILE *f, MIR_str_t str) {
     else if (str.s[i] == '\f')
       fprintf (f, "\\f");
     else
-      fprintf (f, "\\%03o", str.s[i]);
+      fprintf (f, "\\%03o", (unsigned char) str.s[i]);
   fprintf (f, "\"");
 }
 
@@ -2505,7 +2518,10 @@ void MIR_output_op (MIR_context_t ctx, FILE *f, MIR_op_t op, MIR_func_t func) {
     }
     break;
   }
-  case MIR_OP_REF: fprintf (f, "%s", MIR_item_name (ctx, op.u.ref)); break;
+  case MIR_OP_REF:
+    if (op.u.ref->module != func->func_item->module) fprintf (f, "%s.", op.u.ref->module->name);
+    fprintf (f, "%s", MIR_item_name (ctx, op.u.ref));
+    break;
   case MIR_OP_STR: out_str (f, op.u.str); break;
   case MIR_OP_LABEL: output_label (ctx, f, func, op.u.label); break;
   default: mir_assert (FALSE);
@@ -2792,7 +2808,7 @@ void MIR_simplify_op (MIR_context_t ctx, MIR_item_t func_item, MIR_insn_t insn, 
     if (nop == 0) return; /* do nothing: it is a prototype */
     if (nop == 1 && op->mode == MIR_OP_REF
         && (op->u.ref->item_type == MIR_import_item || op->u.ref->item_type == MIR_func_item))
-      return; /* do nothing: it is an immediate oeprand */
+      return; /* do nothing: it is an immediate operand */
   }
   if (code == MIR_VA_ARG && nop == 2) return; /* do nothing: this operand is used as a type */
   switch (op->mode) {
@@ -4457,17 +4473,6 @@ static MIR_str_t to_str (MIR_context_t ctx, uint64_t str_num) {
   return VARR_GET (MIR_str_t, bin_strings, str_num);
 }
 
-static void process_reserved_name (const char *s, const char *prefix, uint32_t *max_num) {
-  char *end;
-  uint32_t num;
-  size_t len = strlen (prefix);
-
-  if (strncmp (s, prefix, len) != 0) return;
-  num = strtoul (s + len, &end, 10);
-  if (*end != '\0') return;
-  if (*max_num < num) *max_num = num;
-}
-
 static MIR_reg_t to_reg (MIR_context_t ctx, uint64_t reg_str_num, MIR_item_t func) {
   const char *s = to_str (ctx, reg_str_num).s;
 
@@ -5520,7 +5525,7 @@ void MIR_scan_string (MIR_context_t ctx, const char *str) {
   t.code = TC_NL;
   for (;;) {
     if (setjmp (error_jmp_buf)) {
-      while (t.code != TC_NL && t.code != EOF)
+      while (t.code != TC_NL && t.code != TC_EOFILE)
         scan_token (ctx, &t, get_string_char, unget_string_char);
       if (t.code == TC_EOFILE) break;
     }
@@ -5534,6 +5539,8 @@ void MIR_scan_string (MIR_context_t ctx, const char *str) {
       scan_token (ctx, &t, get_string_char, unget_string_char);
       if (t.code != TC_COL) break;
       VARR_PUSH (label_name_t, label_names, name);
+      if (module != NULL)
+        process_reserved_name (name, TEMP_ITEM_NAME_PREFIX, &module->last_temp_item_num);
       scan_token (ctx, &t, get_string_char, unget_string_char);
       if (t.code == TC_NL)
         scan_token (ctx, &t, get_string_char, unget_string_char); /* label_names without insn */
@@ -5668,7 +5675,7 @@ void MIR_scan_string (MIR_context_t ctx, const char *str) {
               scan_error (ctx, local_p ? "wrong var" : "wrong arg");
             } else {
               op.u.mem.base = t.u.i;
-              if (t.u.i <= 0 || t.u.i >= (1ll << sizeof (MIR_reg_t) * 8))
+              if (t.u.i < 0 || t.u.i >= (1ll << sizeof (MIR_reg_t) * 8))
                 scan_error (ctx, "invalid block arg size");
               scan_token (ctx, &t, get_string_char, unget_string_char);
               if (t.code != TC_LEFT_PAR) scan_error (ctx, "wrong block arg");
@@ -5918,8 +5925,8 @@ void MIR_scan_string (MIR_context_t ctx, const char *str) {
       if (func != NULL) MIR_append_insn (ctx, func, insn);
     }
   }
-  if (func != NULL) scan_error (ctx, "absent endfunc");
-  if (module != NULL) scan_error (ctx, "absent endmodule");
+  if (func != NULL) { if (!setjmp(error_jmp_buf)) scan_error (ctx, "absent endfunc"); }
+  if (module != NULL) { if (!setjmp(error_jmp_buf)) scan_error (ctx, "absent endmodule"); }
   if (VARR_LENGTH (char, error_msg_buf) != 0)
     MIR_get_error_func (ctx) (MIR_syntax_error, VARR_ADDR (char, error_msg_buf));
 }
