@@ -4,6 +4,9 @@
  * In the future the python API's will also be included in link resolving.
  */
 #include <stddef.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 #ifndef _WIN32
 #include <dlfcn.h>
 #if defined(__unix__) || defined(__APPLE__)
