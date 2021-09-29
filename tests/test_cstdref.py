@@ -26,8 +26,8 @@ class CStdRefTests(unittest.TestCase):
         libmir.capi.libmir_scan_string(ctx, ir)
         m = libmir.capi.libmir_get_last_module(ctx)
         libmir.capi.libmir_load_module(ctx, m)
-        libmir.capi.libmir_link(ctx, libmir.capi.libmir_set_gen_interface, libmir.capi.libmir_std_import_resolver)
-        sin2 = libmir.capi.libmir_get_export_item(ctx, b"sin2", m)[0]
+        libmir.link_with_std_resolve(ctx)
+        sin2 = libmir.capi.libmir_get_export_item(ctx, b"sin2", m).contents
         for x in [0.2, 0.3, 0.5, 2.4]:
             resa = ctypes.CFUNCTYPE(ctypes.c_double, ctypes.c_double)(sin2.addr)(x)
             self.assertAlmostEqual(math.sin(2 * x), resa)
