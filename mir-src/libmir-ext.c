@@ -30,6 +30,20 @@ MIR_item_t MIR_get_export_item (MIR_context_t ctx, const char *name, MIR_module_
   return NULL;
 }
 
+MIR_item_t MIR_get_next_export_item (MIR_context_t ctx, void ** pt, MIR_module_t module) {
+  for (
+    MIR_item_t item = *pt == NULL ? DLIST_HEAD (MIR_item_t, module->items) : DLIST_NEXT (MIR_item_t, *pt);
+    item != NULL;
+    item = DLIST_NEXT (MIR_item_t, item)
+  ) {
+    if (item->item_type == MIR_export_item) {
+      *pt = item;
+      return item->ref_def;
+    }
+  }
+  return NULL;
+}
+
 char mir_error_buffer[4096];
 int has_error = 0;
 const char * MIR_get_last_error() {

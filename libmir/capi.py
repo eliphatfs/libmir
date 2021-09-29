@@ -2,10 +2,60 @@ import ctypes
 import os
 
 
+(MIR_T_I8, MIR_T_U8, MIR_T_I16, MIR_T_U16, MIR_T_I32, MIR_T_U32, MIR_T_I64, MIR_T_U64,
+ MIR_T_F, MIR_T_D, MIR_T_LD,
+ MIR_T_P, MIR_T_BLK) = range(13)
+
+
 class libmir_pointer_dlink(ctypes.Structure):
     _fields_ = [
         ('prev', ctypes.c_void_p),
         ('next', ctypes.c_void_p)
+    ]
+
+
+class libmir_varr(ctypes.Structure):
+    _fields_ = [
+        ('capacity', ctypes.c_size_t),
+        ('size', ctypes.c_size_t),
+        ('varr', ctypes.c_void_p),
+    ]
+
+
+class libmir_var(ctypes.Structure):
+    _fields_ = [
+        ('type', ctypes.c_int),
+        ('name', ctypes.c_char_p),
+        ('size', ctypes.c_size_t),
+    ]
+
+
+class libmir_var_varr(ctypes.Structure):
+    _fields_ = [
+        ('capacity', ctypes.c_size_t),
+        ('size', ctypes.c_size_t),
+        ('varr', ctypes.POINTER(libmir_var)),
+    ]
+
+
+class libmir_func(ctypes.Structure):
+    _fields_ = [
+        ('name', ctypes.c_char_p),
+        ('func_item', ctypes.c_void_p),
+        ('original_vars_num', ctypes.c_size_t),
+        ('insns', libmir_pointer_dlink),
+        ('original_insns', libmir_pointer_dlink),
+        ('nres', ctypes.c_uint32),
+        ('nargs', ctypes.c_uint32),
+        ('last_temp_num', ctypes.c_uint32),
+        ('n_inlines', ctypes.c_uint32),
+        ('res_types', ctypes.POINTER(ctypes.c_int)),
+        ('vararg_p', ctypes.c_char),
+        ('expr_p', ctypes.c_char),
+        ('vars', ctypes.POINTER(libmir_var_varr)),
+        ('machine_code', ctypes.c_void_p),
+        ('call_addr', ctypes.c_void_p),
+        ('internal', ctypes.c_void_p),
     ]
 
 
@@ -19,7 +69,8 @@ class libmir_item(ctypes.Structure):
         ('addr', ctypes.c_void_p),
         ('export_p', ctypes.c_char),
         ('section_head_p', ctypes.c_char),
-        ('u', ctypes.c_void_p),
+        ('func', ctypes.POINTER(libmir_func))  # currently only func is exposed
+        # ('u', ctypes.c_void_p),
     ]
 
 
@@ -59,6 +110,10 @@ libmir_get_last_module.restype = ctypes.c_void_p
 libmir_get_export_item = libmir.MIR_get_export_item
 libmir_get_export_item.argtypes = (ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p)
 libmir_get_export_item.restype = ctypes.POINTER(libmir_item)
+
+libmir_get_next_export_item = libmir.MIR_get_next_export_item
+libmir_get_next_export_item.argtypes = (ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p)
+libmir_get_next_export_item.restype = ctypes.POINTER(libmir_item)
 
 libmir_load_module = libmir.MIR_load_module
 libmir_load_module.argtypes = (ctypes.c_void_p, ctypes.c_void_p)
