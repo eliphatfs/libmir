@@ -110,3 +110,6 @@ libmir_error_record_helper = libmir.MIR_error_record_helper
 libmir_set_error_func = libmir.MIR_set_error_func
 libmir_set_error_func.argtypes = (ctypes.c_void_p, ctypes.c_void_p)
 libmir_set_error_func.restype = None
+
+libmir_std_import_resolver = libmir.MIR_std_import_resolver
+# TODO: release std lib on exit

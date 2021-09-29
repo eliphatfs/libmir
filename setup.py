@@ -7,7 +7,7 @@ from distutils.extension import Extension
 
 compile_result = subprocess.call([
     'gcc', '-shared', '-o', 'libmir.dll',
-    'mir.c', 'mir-gen.c', 'libmir-ext.c',
+    'mir.c', 'mir-gen.c', 'libmir-ext.c', 'libmir-cstd-resolve.c',
     '-Os', '-fPIC'
 ], cwd='./mir-src')
 if compile_result != 0:
